@@ -5,6 +5,9 @@ import dorkbox.systemTray.SystemTray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -91,7 +94,7 @@ public class Main {
         try {
 
             if(prefs.getBoolean("hourSoundNotification", true)){
-                Runtime.getRuntime().exec(new String[]{"paplay", AUDIO_PATH});
+                playSound();
             }
 
             Settings settings = new Settings();
@@ -100,6 +103,16 @@ public class Main {
 
         } catch (Exception e) {
             logger.error("Failed to send notification", e);
+        }
+    }
+
+    private static void playSound() {
+        try (AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(Main.AUDIO_PATH).getAbsoluteFile())) {
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioInputStream);
+            clip.start();
+        } catch (Exception e) {
+            logger.error("Error playing sound", e);
         }
     }
 
@@ -149,10 +162,7 @@ public class Main {
             scheduler.shutdownNow();
         }
         scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleAtFixedRate(() -> {
-            sendNotification("HourFlow", message);
-
-        }, interval.toMillis(), interval.toMillis(), TimeUnit.MILLISECONDS);
+        scheduler.scheduleAtFixedRate(() -> sendNotification("HourFlow", message), interval.toMillis(), interval.toMillis(), TimeUnit.MILLISECONDS);
 
         Runtime.getRuntime().addShutdownHook(new Thread(scheduler::shutdownNow));
     }

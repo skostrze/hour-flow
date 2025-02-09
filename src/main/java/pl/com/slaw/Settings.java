@@ -26,7 +26,7 @@ public class Settings extends JDialog {
 
         prefs = Preferences.userNodeForPackage(Settings.class);
         setTitle("Settings");
-        setSize(350, 200);
+        setSize(350, 210);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
