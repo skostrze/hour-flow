@@ -10,11 +10,13 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -28,14 +30,13 @@ public class Main {
     private static final String ICON_PATH = "/hour-flow.png";
     private static ScheduledExecutorService scheduler;
     private static final Preferences prefs = Preferences.userNodeForPackage(Main.class);
-    private static final String AUDIO_PATH = "notification.wav";
+    private static final String AUDIO_PATH = "/notification.wav";
 
 
     static {
         try {
-            extractResource(AUDIO_PATH);
             setupSystemTray();
-        } catch (InterruptedException | IOException e) {
+        } catch (InterruptedException e) {
             logger.error("Error setting up system tray", e);
         }
 
@@ -56,7 +57,6 @@ public class Main {
         }
 
 //        sendNotification("HourFlow", "HourFlow started");
-
         if(prefs.getBoolean("hourDelayEnabled", true))
             TimeUnit.MINUTES.sleep(1);
 
@@ -107,9 +107,10 @@ public class Main {
     }
 
     private static void playSound() {
-        try (AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(Main.AUDIO_PATH).getAbsoluteFile())) {
+        try (InputStream audioSrc = Main.class.getResourceAsStream(AUDIO_PATH);  InputStream bufferedIn = new BufferedInputStream(audioSrc);
+             AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn)) {
             Clip clip = AudioSystem.getClip();
-            clip.open(audioInputStream);
+            clip.open(audioStream);
             clip.start();
         } catch (Exception e) {
             logger.error("Error playing sound", e);
@@ -165,16 +166,6 @@ public class Main {
         scheduler.scheduleAtFixedRate(() -> sendNotification("HourFlow", message), interval.toMillis(), interval.toMillis(), TimeUnit.MILLISECONDS);
 
         Runtime.getRuntime().addShutdownHook(new Thread(scheduler::shutdownNow));
-    }
-
-
-    public static void extractResource(String filename) throws IOException {
-        File file = new File(filename);
-        if (!file.exists()) {
-            try(InputStream link = (Main.class.getResourceAsStream(File.separator + filename))) {
-                Files.copy(link, file.getAbsoluteFile().toPath());
-            }
-        }
     }
 
     public static void main(String[] args) {
