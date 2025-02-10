@@ -1,2 +1,2 @@
 # hour-flow
-Aplikacja napisana do przypominania o cyklicznych czynnościach. 
+Aplikacja napisana do przypominania o cyklicznych czynnościach. Po dodaniu jej do autostartu nie ma szans abyś pominął powiadomienie. 
